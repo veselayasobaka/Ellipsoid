@@ -1,18 +1,25 @@
+#include <iostream>
 #include <GL/glut.h>    
 #include <GL/gl.h>	
 #include <GL/glu.h>	
-#include <unistd.h>
-#include <math.h>     
-#include <iostream>
+#include <unistd.h> 
+#include <math.h>    
+#include <eigen3/Eigen/Dense>
+#include <eigen3/Eigen/Geometry>
 using namespace std;
-
+using namespace Eigen;
+typedef Matrix<float, 3, 1> Vector3;
+typedef Matrix<float, 3, 3> Rotation;
 #define ESCAPE 27
-
 int window; 
 
-/* rotation angle */
-float rtri = 0;
+/* rotation angle for the triangle. */
 float t = 0;
+Rotation Rot;
+void printVertex(const Vector3 &v)
+{
+    glVertex3f(v[0], v[1], v[2]);
+}
 
 /* A general OpenGL initialization function.  Sets all of the initial parameters. */
 void InitGL(int Width, int Height)	        
@@ -40,64 +47,52 @@ void ReSizeGLScene(int Width, int Height)
   gluPerspective(45.0f,(GLfloat)Width/(GLfloat)Height,0.1f,100.0f);
   glMatrixMode(GL_MODELVIEW);
 }
-void DrawEllipsoid(unsigned int uiStacks, unsigned int uiSlices, float fA, float fB, float fC)
+void DrawEllipsoid(unsigned int uiStacks, unsigned int uiSlices, float fA, float fB, float fC, Rotation Rot)
 {
 	float aStep = (M_PI) / (float)uiSlices;
 	float bStep = (M_PI) / (float)uiStacks;
 	for(float alpha = -M_PI/2; alpha <= (M_PI/2)+.0001; alpha += aStep)
 	{
-		glColor3f(2.55, 1.79, 0);
-		if(alpha>0)
-		    glColor3f(0, 0, 0.6);
+
 		glBegin(GL_TRIANGLE_STRIP);
 		for(float beta = 0; beta <= 2*M_PI+.0001; beta += bStep)
 		{
-			glVertex3f(fA * cos(alpha) * cos(beta), fB * cos(alpha) * sin(beta), fC * sin(alpha));
-			glVertex3f(fA * cos(alpha+aStep) * cos(beta), fB * cos(alpha+aStep) * sin(beta), fC * sin(alpha+aStep));
+			Vector3 v1(fA * cos(alpha) * cos(beta), fB * cos(alpha) * sin(beta), fC * sin(alpha));
+			Vector3 v2(fA * cos(alpha+aStep) * cos(beta), fB * cos(alpha+aStep) * sin(beta), fC * sin(alpha+aStep));
+			printVertex(Rot*v1);
+			printVertex(Rot*v2);
 		}
 		glEnd();
 	}
 }
-float z = 2;
-float v = 0;
-float timer = 0;
-float zCoord()
-{
-	t = 0.01;
-	v+=0.01*t;
-	z -= 10*v;
-	cout << z << ' ' << v << endl;
-	if (z<-1)
-		{
-		v*=-1;
-		}
-	return z;
-}
-
 /* The main drawing function. */
 void DrawGLScene()
 {
   glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);	// Clear The Screen And The Depth Buffer
 
   glLoadIdentity();				// Reset The View
-  glTranslatef(0, 0 ,-6);
-  glBegin(GL_POLYGON);				// drawing
-  glColor3f(0.2f,0.5f,0.0f);			// Set The Color
-  glVertex3f( 2.0f,-1.0f, 1.0f);		// Top Right 
-  glVertex3f(-2.0f,-1.0f, 1.0f);		// Top Left 
-  glVertex3f(-2.0f,-1.0f,-1.0f);		// Bottom Left 
-  glVertex3f( 2.0f,-1.0f,-1.0f);		// Bottom RightOf 		
+  glTranslatef(0.0f,0.0f,-4.0f);
+  glBegin(GL_POLYGON);				// start drawing a pyramid
+  glColor3f(0.2f,0.5f,0.0f);			// Set The Color To Orange
+  glVertex3f( 3.0f,-1.0f, 1.0f);		// Top Right Of The Quad (Bottom)
+  glVertex3f(-3.0f,-1.0f, 1.0f);		// Top Left Of The Quad (Bottom)
+  glVertex3f(-3.0f,-1.0f,-1.0f);		// Bottom Left Of The Quad (Bottom)
+  glVertex3f( 3.0f,-1.0f,-1.0f);		// Bottom Right Of The Quad (Bottom)
   glEnd();
 
   glLoadIdentity();
-  glTranslatef(0, 0.3,-6);
-  glRotatef(100, 0, 0, 0);
-  glRotatef(rtri, 1, 0, 0);
-  DrawEllipsoid(30, 30, 0.1, 0.4, 0.9);
-  rtri-=2;					
-  glutSwapBuffers();
-  t += 0.001;
+  glTranslatef(0, 0, -4);
+  glBegin(GL_LINES);
+  Quaternionf q(cos(t), sin(t), sin(t), sin(t));
+  q.normalize();
+  Rot = q.toRotationMatrix();
+  glColor3f(0, 0, 0);
+  DrawEllipsoid(30, 30, 0.1, 0.2, 0.5, Rot);
   glEnd();
+  t += 0.1;
+
+  					
+  glutSwapBuffers();
 }
 
 /* The function called whenever a key is pressed. */
@@ -137,7 +132,7 @@ int main(int argc, char **argv)
   glutInitWindowPosition(0, 0);  
 
   /* Open a window */  
-  window = glutCreateWindow("ellipsoid");  
+  window = glutCreateWindow("Jeff Molofee's GL Code Tutorial ... NeHe '99");  
 
   /* Register the function to do all our OpenGL drawing. */
   glutDisplayFunc(&DrawGLScene);  
