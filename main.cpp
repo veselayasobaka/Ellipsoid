@@ -83,13 +83,13 @@ void DrawGLScene()
   glLoadIdentity();
   glTranslatef(0, 0, -4);
   glBegin(GL_LINES);
-  Quaternionf q(cos(t), sin(t), sin(t), sin(t));
+  Quaternionf q(cos(t), sin(t-1), sin(t+2), sin(t));
   q.normalize();
   Rot = q.toRotationMatrix();
   glColor3f(0, 0, 0);
   DrawEllipsoid(30, 30, 0.1, 0.2, 0.5, Rot);
   glEnd();
-  t += 0.1;
+  t += 0.05;
 
   					
   glutSwapBuffers();
@@ -132,7 +132,7 @@ int main(int argc, char **argv)
   glutInitWindowPosition(0, 0);  
 
   /* Open a window */  
-  window = glutCreateWindow("Jeff Molofee's GL Code Tutorial ... NeHe '99");  
+  window = glutCreateWindow("Help me, I think I'm falling");  
 
   /* Register the function to do all our OpenGL drawing. */
   glutDisplayFunc(&DrawGLScene);  
