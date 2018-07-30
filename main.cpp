@@ -13,8 +13,6 @@ typedef Matrix<float, 3, 3> Matrix3;
 #define ESCAPE 27
 int window; 
 
-float t = 0;        // time
-
 struct RigidEllipsoid
 {
     /* Constant quantities */
@@ -56,6 +54,15 @@ struct RigidEllipsoid
          0, 0, 1;
     }
     
+    /**
+     * \brief
+     * \details
+     * \param[in] uiStacks - 
+     * \param[in] uiSlices - 
+     * \param[in] fA - 
+     * \param[in] fB - 
+     * \param[in] fC - 
+     */
     void DrawEllipsoid(unsigned int uiStacks, unsigned int uiSlices, float fA, float fB, float fC)
     {
         glLoadIdentity();
@@ -86,9 +93,8 @@ struct RigidEllipsoid
     }
 /*q.normalize();
   Rot = q.toMatrix3Matrix();*/
-    
-
 };
+
 RigidEllipsoid Ellipsoid;
 
 /* A general OpenGL initialization function.  Sets all of the initial parameters. */
@@ -121,6 +127,7 @@ void ReSizeGLScene(int Width, int Height)
 /* The main drawing function. */
 void DrawGLScene()
 {
+    static float t = 0;        // time
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);    // Clear The Screen And The Depth Buffer
 
     glLoadIdentity();                // Reset The View
@@ -132,10 +139,7 @@ void DrawGLScene()
     glVertex3f(-3.0f,-1.0f,-1.0f);        // Bottom Left Of The Quad (Bottom)
     glVertex3f( 3.0f,-1.0f,-1.0f);        // Bottom Right Of The Quad (Bottom)
     glEnd();
-
     Ellipsoid.DrawEllipsoid(30, 30, 0.1, 0.2, 0.5);
-
-
     t += 0.05;
 
     glutSwapBuffers();
