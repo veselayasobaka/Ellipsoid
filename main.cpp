@@ -45,8 +45,9 @@ struct RigidEllipsoid
     {
     x[0] = x[2] = 0;
     x[1] = -4;
-    q.x() = q.y() = q.z() = 0;
-    q.w() = 1;
+    q.x() = q.y() = q.z() = cos(t);
+    q.w() = sin(t);
+    q.normalize();
     v[0] = v[1] = v[2] = 0;
     L[0] = L[1] = L[2] = 1;
     Ibody << x[1]*x[1]+x[2]*x[2], 0, 0,
@@ -54,6 +55,7 @@ struct RigidEllipsoid
              0, 0, x[1]*x[1]+x[2]*x[2];
     Ibodyinv = Ibody.inverse();
     R << q.toRotationMatrix();
+    cout << R << endl;
     }
     
     void DrawEllipsoid(unsigned int uiStacks, unsigned int uiSlices, float fA, float fB, float fC)
@@ -84,12 +86,16 @@ struct RigidEllipsoid
         }
         glEnd();
     }
+    void solve()
+    {
+    
+    }
 /*q.normalize();
   Rot = q.toMatrix3Matrix();*/
     
 
 };
-RigidEllipsoid Ellipsoid;
+
 
 /* A general OpenGL initialization function.  Sets all of the initial parameters. */
 void InitGL(int Width, int Height)            
@@ -132,10 +138,8 @@ void DrawGLScene()
     glVertex3f(-3.0f,-1.0f,-1.0f);        // Bottom Left Of The Quad (Bottom)
     glVertex3f( 3.0f,-1.0f,-1.0f);        // Bottom Right Of The Quad (Bottom)
     glEnd();
-
+    RigidEllipsoid Ellipsoid;
     Ellipsoid.DrawEllipsoid(30, 30, 0.1, 0.2, 0.5);
-
-
     t += 0.05;
 
     glutSwapBuffers();
