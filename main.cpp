@@ -29,13 +29,13 @@ struct RigidEllipsoid
 
     /* State variables */
     Vector3 x;
-    Matrix3 R;
+    Quaternionf q;
     Vector3 v;
     Vector3 L;
 
     /* Derived quantities (auxiliary variables) */
     Matrix3 Iinv;
-
+    Matrix3 R;
     Vector3 omega;
 
     /* Computed quantities */
@@ -46,15 +46,15 @@ struct RigidEllipsoid
     {
     x[0] = x[2] = 0;
     x[1] = -4;
+    q.x() = q.y() = q.z() = 0;
+    q.w() = 1;
     v[0] = v[1] = v[2] = 0;
     L[0] = L[1] = L[2] = 1;
     Ibody << x[1]*x[1]+x[2]*x[2], 0, 0,
              0, x[0]*x[0]+x[2]*x[2], 0,
              0, 0, x[1]*x[1]+x[2]*x[2];
     Ibodyinv = Ibody.inverse();
-    R << 1, 0, 0,
-         0, 1, 0,
-         0, 0, 1;
+    R << q.toRotationMatrix();
     }
     void DrawEllipsoid(unsigned int uiStacks, unsigned int uiSlices, float fA, float fB, float fC)
     {
