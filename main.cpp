@@ -9,17 +9,87 @@
 using namespace std;
 using namespace Eigen;
 typedef Matrix<float, 3, 1> Vector3;
-typedef Matrix<float, 3, 3> Rotation;
+typedef Matrix<float, 3, 3> Matrix3;
 #define ESCAPE 27
 int window; 
 
-/* rotation angle for the triangle. */
-float t = 0;
-Rotation Rot;
+
+float t = 0;        // time
+
 void printVertex(const Vector3 &v)
 {
     glVertex3f(v[0], v[1], v[2]);
 }
+
+struct RigidEllipsoid
+{
+    /* Constant quantities */
+    Matrix3 Ibody;
+    Matrix3 Ibodyinv;
+
+    /* State variables */
+    Vector3 x;
+    Matrix3 R;
+    Vector3 v;
+    Vector3 L;
+
+    /* Derived quantities (auxiliary variables) */
+    Matrix3 Iinv;
+
+    Vector3 omega;
+
+    /* Computed quantities */
+    Vector3 force;
+    Vector3 torque;
+    /* Methods */
+    RigidEllipsoid()
+    {
+    x[0] = x[2] = 0;
+    x[1] = -4;
+    v[0] = v[1] = v[2] = 0;
+    L[0] = L[1] = L[2] = 1;
+    Ibody << x[1]*x[1]+x[2]*x[2], 0, 0,
+             0, x[0]*x[0]+x[2]*x[2], 0,
+             0, 0, x[1]*x[1]+x[2]*x[2];
+    Ibodyinv = Ibody.inverse();
+    R << 1, 0, 0,
+         0, 1, 0,
+         0, 0, 1;
+    }
+    void DrawEllipsoid(unsigned int uiStacks, unsigned int uiSlices, float fA, float fB, float fC)
+    {
+        glLoadIdentity();
+        glTranslatef(x[0], x[2], x[1]);
+        glBegin(GL_LINES);
+	float aStep = (M_PI) / (float)uiSlices;
+	float bStep = (M_PI) / (float)uiStacks;
+
+	for(float alpha = -M_PI/2; alpha <= (M_PI/2)+.0001; alpha += aStep)
+	{
+		glColor3f(0, 1, 0);
+		if(alpha < 0 && alpha > -M_PI/4)
+		    glColor3f(1, 0, 1);
+		if(alpha > M_PI/4)
+		    glColor3f(1, 0, 1);
+
+		glBegin(GL_TRIANGLE_STRIP);
+		for(float beta = 0; beta <= 2*M_PI+.0001; beta += bStep)
+		{
+			Vector3 v1(fA * cos(alpha) * cos(beta), fB * cos(alpha) * sin(beta), fC * sin(alpha));
+			Vector3 v2(fA * cos(alpha+aStep) * cos(beta), fB * cos(alpha+aStep) * sin(beta), fC * sin(alpha+aStep));
+			printVertex(R*v1);
+			printVertex(R*v2);
+		}
+		glEnd();
+	}
+        glEnd();
+    }
+/*q.normalize();
+  Rot = q.toMatrix3Matrix();*/
+    
+
+};
+    RigidEllipsoid Ellipsoid;
 
 /* A general OpenGL initialization function.  Sets all of the initial parameters. */
 void InitGL(int Width, int Height)	        
@@ -47,24 +117,7 @@ void ReSizeGLScene(int Width, int Height)
   gluPerspective(45.0f,(GLfloat)Width/(GLfloat)Height,0.1f,100.0f);
   glMatrixMode(GL_MODELVIEW);
 }
-void DrawEllipsoid(unsigned int uiStacks, unsigned int uiSlices, float fA, float fB, float fC, Rotation Rot)
-{
-	float aStep = (M_PI) / (float)uiSlices;
-	float bStep = (M_PI) / (float)uiStacks;
-	for(float alpha = -M_PI/2; alpha <= (M_PI/2)+.0001; alpha += aStep)
-	{
 
-		glBegin(GL_TRIANGLE_STRIP);
-		for(float beta = 0; beta <= 2*M_PI+.0001; beta += bStep)
-		{
-			Vector3 v1(fA * cos(alpha) * cos(beta), fB * cos(alpha) * sin(beta), fC * sin(alpha));
-			Vector3 v2(fA * cos(alpha+aStep) * cos(beta), fB * cos(alpha+aStep) * sin(beta), fC * sin(alpha+aStep));
-			printVertex(Rot*v1);
-			printVertex(Rot*v2);
-		}
-		glEnd();
-	}
-}
 /* The main drawing function. */
 void DrawGLScene()
 {
@@ -80,15 +133,9 @@ void DrawGLScene()
   glVertex3f( 3.0f,-1.0f,-1.0f);		// Bottom Right Of The Quad (Bottom)
   glEnd();
 
-  glLoadIdentity();
-  glTranslatef(0, 0, -4);
-  glBegin(GL_LINES);
-  Quaternionf q(cos(t), sin(t-1), sin(t+2), sin(t));
-  q.normalize();
-  Rot = q.toRotationMatrix();
-  glColor3f(0, 0, 0);
-  DrawEllipsoid(30, 30, 0.1, 0.2, 0.5, Rot);
-  glEnd();
+  Ellipsoid.DrawEllipsoid(30, 30, 0.1, 0.2, 0.5);
+
+
   t += 0.05;
 
   					
