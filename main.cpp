@@ -12,6 +12,7 @@ typedef Matrix<float, 3, 1> Vector3;
 typedef Matrix<float, 3, 3> Matrix3;
 #define ESCAPE 27
 int window; 
+float t = 0;        // time
 
 struct RigidEllipsoid
 {
@@ -21,13 +22,13 @@ struct RigidEllipsoid
 
     /* State variables */
     Vector3 x;
-    Matrix3 R;
+    Quaternionf q;
     Vector3 v;
     Vector3 L;
 
     /* Derived quantities (auxiliary variables) */
     Matrix3 Iinv;
-
+    Matrix3 R;
     Vector3 omega;
 
     /* Computed quantities */
@@ -43,15 +44,17 @@ struct RigidEllipsoid
     {
     x[0] = x[2] = 0;
     x[1] = -4;
+    q.x() = q.y() = q.z() = cos(t);
+    q.w() = sin(t);
+    q.normalize();
     v[0] = v[1] = v[2] = 0;
     L[0] = L[1] = L[2] = 1;
     Ibody << x[1]*x[1]+x[2]*x[2], 0, 0,
              0, x[0]*x[0]+x[2]*x[2], 0,
              0, 0, x[1]*x[1]+x[2]*x[2];
     Ibodyinv = Ibody.inverse();
-    R << 1, 0, 0,
-         0, 1, 0,
-         0, 0, 1;
+    R << q.toRotationMatrix();
+    cout << R << endl;
     }
     
     /**
@@ -91,11 +94,13 @@ struct RigidEllipsoid
         }
         glEnd();
     }
+    void solve()
+    {
+    
+    }
 /*q.normalize();
   Rot = q.toMatrix3Matrix();*/
 };
-
-RigidEllipsoid Ellipsoid;
 
 /* A general OpenGL initialization function.  Sets all of the initial parameters. */
 void InitGL(int Width, int Height)            
@@ -127,7 +132,6 @@ void ReSizeGLScene(int Width, int Height)
 /* The main drawing function. */
 void DrawGLScene()
 {
-    static float t = 0;        // time
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);    // Clear The Screen And The Depth Buffer
 
     glLoadIdentity();                // Reset The View
@@ -139,6 +143,7 @@ void DrawGLScene()
     glVertex3f(-3.0f,-1.0f,-1.0f);        // Bottom Left Of The Quad (Bottom)
     glVertex3f( 3.0f,-1.0f,-1.0f);        // Bottom Right Of The Quad (Bottom)
     glEnd();
+    RigidEllipsoid Ellipsoid;
     Ellipsoid.DrawEllipsoid(30, 30, 0.1, 0.2, 0.5);
     t += 0.05;
 
