@@ -9,5 +9,6 @@ sudo apt install freeglut3-dev
 
 ## How to build
 ```
+cd Ellipsoid && mkdir build
 make
 ```
